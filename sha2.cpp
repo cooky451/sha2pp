@@ -495,7 +495,7 @@ namespace sha2
 		{
 			auto r = s + to_add;
 #if defined SHA2_CARE_ABOUT_INTEGER_OVERFLOW
-			if (r < s || s > max)
+			if (r < s || r > max)
 			{
 #if defined SHA2_HASH_USE_EXCEPTIONS_FOR_OVERFLOW
 				throw std::overflow_error("Message size overflow.");
