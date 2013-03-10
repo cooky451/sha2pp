@@ -41,9 +41,7 @@ namespace sha2
 	using std::size_t;
 	using std::array;
 
-	// Using cast(-1)-hack here because VS doesn't have constexpr yet.
-	// static const auto max_message_size = std::numeric_limits<msize_type>::max() / 8;
-	static const auto max_message_size = static_cast<msize_type>(-1) / 8;
+	const auto max_message_size = std::numeric_limits<msize_type>::max() / 8;
 
 	namespace detail
 	{
