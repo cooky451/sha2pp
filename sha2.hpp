@@ -12,7 +12,7 @@
 /* 
  * Secure Hash Standard (SHS) http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
  * 
- * This implementation currently assumes small endian!
+ * This implementation currently assumes little endian!
  * 
  * Compile with Visual Studio 2012 or
  * GCC with: g++ -std=c++11 -march=native -O4 -Wall -pedantic
@@ -89,9 +89,6 @@ namespace sha2
 {
 	namespace detail
 	{
-		word32 swap_bytes(word32 w);
-		word64 swap_bytes(word64 w);
-
 		void sha2_update(array<word32, 8>& H, const array<word32, 16>& M);
 		void sha2_update(array<word64, 8>& H, const array<word64, 16>& M);
 

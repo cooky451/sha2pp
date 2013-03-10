@@ -66,6 +66,28 @@ namespace
 		0x4cc5d4becb3e42b6ull, 0x597f299cfc657e2aull, 0x5fcb6fab3ad6faecull, 0x6c44198c4a475817ull, 
 	};
 
+	word32 swap_bytes(word32 w)
+	{
+		return 
+				((((w) & 0xFF000000ul) >> 24) 
+			| (((w) & 0x00FF0000ul) >> 8) 
+			| (((w) & 0x0000FF00ul) << 8) 
+			| (((w) & 0x000000FFul) << 24));
+	}
+
+	word64 swap_bytes(word64 w)
+	{
+		return 
+				((((w) & 0xFF00000000000000ull) >> 56) 
+			| (((w) & 0x00FF000000000000ull) >> 40) 
+			| (((w) & 0x0000FF0000000000ull) >> 24) 
+			| (((w) & 0x000000FF00000000ull) >> 8)
+			| (((w) & 0x00000000FF000000ull) << 8) 
+			| (((w) & 0x0000000000FF0000ull) << 24) 
+			| (((w) & 0x000000000000FF00ull) << 40) 
+			| (((w) & 0x00000000000000FFull) << 56));
+	}
+
 	// 5.3.2 SHA-224
 	const array<word32, 8> sha224_H0 = 
 	{{ // GCC complains about missing braces without this.
@@ -467,28 +489,6 @@ namespace sha2
 		void sha2_finish(array<word64, 8>& H, const void* data, size_t size, msize_type message_size)
 		{
 			sha2_finish_impl(H, data, size, message_size);
-		}
-
-		word32 swap_bytes(word32 w)
-		{
-			return 
-				 ((((w) & 0xFF000000ul) >> 24) 
-				| (((w) & 0x00FF0000ul) >> 8) 
-				| (((w) & 0x0000FF00ul) << 8) 
-				| (((w) & 0x000000FFul) << 24));
-		}
-
-		word64 swap_bytes(word64 w)
-		{
-			return 
-				 ((((w) & 0xFF00000000000000ull) >> 56) 
-				| (((w) & 0x00FF000000000000ull) >> 40) 
-				| (((w) & 0x0000FF0000000000ull) >> 24) 
-				| (((w) & 0x000000FF00000000ull) >> 8)
-				| (((w) & 0x00000000FF000000ull) << 8) 
-				| (((w) & 0x0000000000FF0000ull) << 24) 
-				| (((w) & 0x000000000000FF00ull) << 40) 
-				| (((w) & 0x00000000000000FFull) << 56));
 		}
 
 		msize_type safe_add(msize_type s, size_t to_add, msize_type max)
