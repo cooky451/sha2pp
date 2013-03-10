@@ -89,6 +89,9 @@ namespace sha2
 {
 	namespace detail
 	{
+		word32 swap_bytes(word32 w);
+		word64 swap_bytes(word64 w);
+
 		void sha2_update(array<word32, 8>& H, const array<word32, 16>& M);
 		void sha2_update(array<word64, 8>& H, const array<word64, 16>& M);
 
