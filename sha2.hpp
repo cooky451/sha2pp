@@ -47,9 +47,20 @@ namespace sha2
 	{
 		template <typename Word, size_t DigestBits>
 		class basic_raw_hasher;
+		/* Interface:
+		 * void update(const array<Word, 16>& block);
+		 * void update(const array<Word, 16>* blocks, size_t number_of_blocks);
+		 * void finish(void* buf, size_t buf_size, const void* data = nullptr, size_t size = 0);
+		 * array<byte, DigestBits / 8> finish(const void* data = nullptr, size_t size = 0);
+		 */
 
 		template <typename Word, size_t DigestBits>
 		class basic_hasher;
+		/* Interface:
+		 * void update(const void* data, size_t size)
+		 * void finish(void* buf, size_t buf_size);
+		 * array<byte, DigestBits / 8> finish();
+		 */
 	}
 
 	// Use these if you're unsure. They copy the data, but take care of
@@ -229,6 +240,7 @@ namespace sha2
 			void finish(void* buf, size_t bufsize)
 			{
 				hasher_.finish(buf, bufsize, &M_[0], used_);
+				*this = basic_hasher();
 			}
 
 			array<byte, DigestBits / 8> finish()
