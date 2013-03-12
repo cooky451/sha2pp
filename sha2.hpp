@@ -56,18 +56,29 @@ namespace sha2
 		template <typename Word, size_t DigestBits>
 		class basic_raw_hasher;
 		/* Interface:
-		 * void update(const array<Word, 16>& block);
-		 * void update(const array<Word, 16>* blocks, size_t number_of_blocks);
+		 * typedef array<Word, 8> state_type;
+		 * typedef array<Word, 16> block_type;
+		 * typedef array<byte, DigestBits / 8> hash_type;
+		 * 
+		 * msize_type message_size() const
+		 * void update(const block_type& block);
+		 * void update(const block_type* blocks, size_t number_of_blocks);
 		 * void finish(void* buf, size_t buf_size, const void* data = nullptr, size_t size = 0);
-		 * array<byte, DigestBits / 8> finish(const void* data = nullptr, size_t size = 0);
+		 * hash_type finish(const void* data = nullptr, size_t size = 0);
 		 */
 
 		template <typename Word, size_t DigestBits>
 		class basic_hasher;
 		/* Interface:
+		 * typedef basic_raw_hasher<Word, DigestBits> raw_hasher_type;
+		 * typedef typename raw_hasher_type::block_type block_type;
+		 * typedef typename raw_hasher_type::state_type state_type;
+		 * typedef typename raw_hasher_type::hash_type hash_type;
+		 * 
+		 * msize_type message_size() const
 		 * void update(const void* data, size_t size)
 		 * void finish(void* buf, size_t buf_size);
-		 * array<byte, DigestBits / 8> finish();
+		 * hash_type finish();
 		 */
 	}
 
