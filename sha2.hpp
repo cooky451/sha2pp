@@ -13,13 +13,14 @@
  * Secure Hash Standard (SHS) http://csrc.nist.gov/publications/fips/fips180-4/fips-180-4.pdf
  * 
  * This implementation currently assumes little endian!
- * 
- * Compile with Visual Studio 2012 or
- * GCC with: g++ -std=c++11 -march=native -O4 -Wall -pedantic
+ * Compile with -std=c++11 when using GCC
  * 
  * Speeds with VS 2012 on a 3570K @3.4GH:
- * x86: SHA256: ~190 MB/s, SHA512: ~70 MB/s
- * x64: SHA256: ~205 MB/s, SHA512: ~312 MB/s
+ * x86: SHA256: ~200 MB/s, SHA512: ~65 MB/s
+ * x64: SHA256: ~210 MB/s, SHA512: ~316 MB/s
+ * 
+ * Speeds with MinGW (GCC 4.7.2):
+ * x86: SHA256: ~180 MB/s, SHA512: ~80 MB/s
  */
 
 #ifndef SHA2_HASH_HPP
@@ -43,6 +44,13 @@ namespace sha2
 
 	const auto max_message_size = std::numeric_limits<msize_type>::max() / 8;
 
+	typedef array<byte, 224 / 8> sha224_hash;
+	typedef array<byte, 256 / 8> sha256_hash;
+	typedef array<byte, 384 / 8> sha384_hash;
+	typedef array<byte, 512 / 8> sha512_hash;
+	typedef array<byte, 224 / 8> sha512_224_hash;
+	typedef array<byte, 256 / 8> sha512_256_hash;
+
 	namespace detail
 	{
 		template <typename Word, size_t DigestBits>
@@ -63,8 +71,10 @@ namespace sha2
 		 */
 	}
 
-	// Use these if you're unsure. They copy the data, but take care of
-	// alignment and strict aliasing.
+	/* Use these if you're unsure.
+	 * They copy the data into an internal array, but take care of
+	 * alignment and strict aliasing.
+	 */
 	typedef detail::basic_hasher<word32, 224> sha224_hasher;
 	typedef detail::basic_hasher<word32, 256> sha256_hasher;
 	typedef detail::basic_hasher<word64, 384> sha384_hasher;
@@ -72,7 +82,10 @@ namespace sha2
 	typedef detail::basic_hasher<word64, 224> sha512_224_hasher;
 	typedef detail::basic_hasher<word64, 256> sha512_256_hasher;
 
-	// These may be faster.
+	/* These may be faster. (About 7% faster on my system.)
+	 * They take a array<Word, 16> directly, this way, if you are sure your architecture
+	 * doesn't have a problem with this, you can cast you data and pass it to them directly.
+	 */
 	typedef detail::basic_raw_hasher<word32, 224> sha224_raw_hasher;
 	typedef detail::basic_raw_hasher<word32, 256> sha256_raw_hasher;
 	typedef detail::basic_raw_hasher<word64, 384> sha384_raw_hasher;
@@ -80,7 +93,6 @@ namespace sha2
 	typedef detail::basic_raw_hasher<word64, 224> sha512_224_raw_hasher;
 	typedef detail::basic_raw_hasher<word64, 256> sha512_256_raw_hasher;
 
-	// For convenience.
 	void sha224(void* buf, size_t buf_size, const void* data, size_t size);
 	void sha256(void* buf, size_t buf_size, const void* data, size_t size);
 	void sha384(void* buf, size_t buf_size, const void* data, size_t size);
@@ -88,12 +100,12 @@ namespace sha2
 	void sha512_224(void* buf, size_t buf_size, const void* data, size_t size);
 	void sha512_256(void* buf, size_t buf_size, const void* data, size_t size);
 
-	array<byte, 224 / 8> sha224(const void* data, size_t size);
-	array<byte, 256 / 8> sha256(const void* data, size_t size);
-	array<byte, 384 / 8> sha384(const void* data, size_t size);
-	array<byte, 512 / 8> sha512(const void* data, size_t size);
-	array<byte, 224 / 8> sha512_224(const void* data, size_t size);
-	array<byte, 256 / 8> sha512_256(const void* data, size_t size);
+	sha224_hash sha224(const void* data, size_t size);
+	sha256_hash sha256(const void* data, size_t size);
+	sha384_hash sha384(const void* data, size_t size);
+	sha512_hash sha512(const void* data, size_t size);
+	sha512_224_hash sha512_224(const void* data, size_t size);
+	sha512_256_hash sha512_256(const void* data, size_t size);
 }
 
 namespace sha2
@@ -149,11 +161,12 @@ namespace sha2
 		class basic_raw_hasher
 		{
 		public:
-			typedef array<Word, 8> state;
-			typedef array<Word, 16> block;
+			typedef array<Word, 8> state_type;
+			typedef array<Word, 16> block_type;
+			typedef array<byte, DigestBits / 8> hash_type;
 
 		private:
-			state H_;
+			state_type H_;
 			msize_type message_size_;
 
 		public:
@@ -162,16 +175,21 @@ namespace sha2
 				, message_size_()
 			{}
 
-			void update(const block& b)
+			msize_type message_size() const
 			{
-				message_size_ = safe_add(message_size_, sizeof b);
-				sha2_update(H_, b);
+				return message_size_;
 			}
 
-			void update(const block* data, size_t size)
+			void update(const block_type& block)
 			{
-				while (size-- != 0)
-					update(*data++);
+				message_size_ = safe_add(message_size_, sizeof block);
+				sha2_update(H_, block);
+			}
+
+			void update(const block_type* blocks, size_t number_of_blocks)
+			{
+				while (number_of_blocks-- != 0)
+					update(*blocks++);
 			}
 
 			void finish(void* buf, size_t buf_size, const void* data = nullptr, size_t size = 0)
@@ -181,9 +199,9 @@ namespace sha2
 				*this = basic_raw_hasher();
 			}
 
-			array<byte, DigestBits / 8> finish(const void* data = nullptr, size_t size = 0)
+			hash_type finish(const void* data = nullptr, size_t size = 0)
 			{
-				array<byte, DigestBits / 8> hash;
+				hash_type hash;
 				finish(hash.data(), bytesize(hash), data, size);
 				return hash;
 			}
@@ -195,18 +213,24 @@ namespace sha2
 		public:
 			typedef basic_raw_hasher<Word, DigestBits> raw_hasher_type;
 
-			typedef typename raw_hasher_type::block block;
-			typedef typename raw_hasher_type::state state;
+			typedef typename raw_hasher_type::block_type block_type;
+			typedef typename raw_hasher_type::state_type state_type;
+			typedef typename raw_hasher_type::hash_type hash_type;
 
 		private:
 			raw_hasher_type hasher_;
-			block M_;
+			block_type M_;
 			size_t used_;
 			
 		public:
 			basic_hasher()
 				: used_()
 			{}
+
+			msize_type message_size() const
+			{
+				return hasher_.message_size() + used_;
+			}
 
 			void update(const void* data, size_t size)
 			{
@@ -243,9 +267,9 @@ namespace sha2
 				*this = basic_hasher();
 			}
 
-			array<byte, DigestBits / 8> finish()
+			hash_type finish()
 			{
-				array<byte, DigestBits / 8> hash;
+				hash_type hash;
 				finish(hash.data(), bytesize(hash));
 				return hash;
 			}
