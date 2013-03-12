@@ -83,8 +83,10 @@ namespace sha2
 	typedef detail::basic_hasher<word64, 256> sha512_256_hasher;
 
 	/* These may be faster. (About 7% faster on my system.)
-	 * They take a array<Word, 16> directly, this way, if you are sure your architecture
-	 * doesn't have a problem with this, you can cast you data and pass it to them directly.
+	 * They take an array<Word, 16> directly.
+	 * This way, if you are sure your architecture
+	 * does support this, you can cast a pointer/reference
+	 * to your data and pass it directly.
 	 */
 	typedef detail::basic_raw_hasher<word32, 224> sha224_raw_hasher;
 	typedef detail::basic_raw_hasher<word32, 256> sha256_raw_hasher;
