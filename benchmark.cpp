@@ -3,7 +3,7 @@
  * Compile with Visual Studio 2012 or
  * GCC with: g++ -std=c++11 -Wall -pedantic -O4
  * And optionally -march=native
- *
+ * 
  */
 
 #include <cstddef>
@@ -116,12 +116,99 @@ void benchmark()
 	}
 }
 
+void benchlong()
+{
+	using namespace std;
+	using namespace sha2;
+
+	const size_t m_size = 128;
+	const size_t size = m_size * 1024 * 1024;
+
+	default_random_engine e;
+	uniform_int_distribution<char> d(' ', '~');
+	string s(size, ' ');
+
+	for (auto& c : s)
+		c = d(e);
+
+	{
+		stopwatch<> sw;
+		auto hash = sha256(s.data(), s.size());
+		double t = duration_cast<double>(sw.elapsed());
+		cout << "sha256:\t\t\t" << setprecision(5) << m_size / t << "\tMB/s\n";
+		print_hash(cout, hash);
+		cout << '\n';
+	}
+
+	{
+		typedef sha256_raw_hasher::block_type block;
+		sha256_raw_hasher hasher;
+		const size_t blocks = s.size() / sizeof(block);
+		const size_t rest = s.size() % sizeof(block);
+		stopwatch<> sw;
+		hasher.update(reinterpret_cast<const block*>(s.data()), s.size() / sizeof(block));
+		auto hash = hasher.finish(s.data() + blocks * sizeof(block), rest);
+		double t = duration_cast<double>(sw.elapsed());
+		cout << "sha256_raw_hasher:\t" << setprecision(5) << m_size / t << "\tMB/s\n";
+		print_hash(cout, hash);
+		cout << '\n';
+	}
+
+	{
+		typedef sha256_hasher::block_type block;
+		sha256_hasher hasher;
+		stopwatch<> sw;
+		hasher.update(s.data(), s.size());
+		auto hash = hasher.finish();
+		double t = duration_cast<double>(sw.elapsed());
+		cout << "sha256_hasher:\t\t" << setprecision(5) << m_size / t << "\tMB/s\n";
+		print_hash(cout, hash);
+		cout << '\n';
+	}
+
+	{
+		stopwatch<> sw;
+		auto hash = sha512(s.data(), s.size());
+		double t = duration_cast<double>(sw.elapsed());
+		cout << "sha512:\t\t\t" << setprecision(5) << m_size / t << "\tMB/s\n";
+		print_hash(cout, hash);
+		cout << '\n';
+	}
+
+	{
+		typedef sha512_raw_hasher::block_type block;
+		sha512_raw_hasher hasher;
+		const size_t blocks = s.size() / sizeof(block);
+		const size_t rest = s.size() % sizeof(block);
+		stopwatch<> sw;
+		hasher.update(reinterpret_cast<const block*>(s.data()), s.size() / sizeof(block));
+		auto hash = hasher.finish(s.data() + blocks * sizeof(block), rest);
+		double t = duration_cast<double>(sw.elapsed());
+		cout << "sha512_raw_hasher:\t" << setprecision(5) << m_size / t << "\tMB/s\n";
+		print_hash(cout, hash);
+		cout << '\n';
+	}
+
+	{
+		typedef sha512_hasher::block_type block;
+		sha512_hasher hasher;
+		stopwatch<> sw;
+		hasher.update(s.data(), s.size());
+		auto hash = hasher.finish();
+		double t = duration_cast<double>(sw.elapsed());
+		cout << "sha512_hasher:\t\t" << setprecision(5) << m_size / t << "\tMB/s\n";
+		print_hash(cout, hash);
+		cout << '\n';
+	}
+}
+
 int main()
 {
 	using namespace std;
 	using namespace sha2;
 
-	cout << "Enter 'file' to hash a file, 'string' to hash a string or 'bench' to run a benchmark.\n";
+	cout << "Enter 'file' to hash a file, 'string' to hash a string, 'bench' "
+	        "to run a benchmark or benchlong to benchmark different hashers.\n";
 
 	string s;
 	while (cout << "#> " && getline(cin, s))
@@ -184,6 +271,10 @@ int main()
 		else if (s == "bench" || s == "benchmark")
 		{
 			benchmark();
+		}
+		else if (s == "benchlong")
+		{
+			benchlong();
 		}
 		else if (s != "")
 		{

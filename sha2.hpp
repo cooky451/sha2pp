@@ -60,7 +60,7 @@ namespace sha2
 		 * typedef array<Word, 16> block_type;
 		 * typedef array<byte, DigestBits / 8> hash_type;
 		 * 
-		 * msize_type message_size() const
+		 * msize_type message_size() const;
 		 * void update(const block_type& block);
 		 * void update(const block_type* blocks, size_t number_of_blocks);
 		 * void finish(void* buf, size_t buf_size, const void* data = nullptr, size_t size = 0);
@@ -75,16 +75,16 @@ namespace sha2
 		 * typedef typename raw_hasher_type::state_type state_type;
 		 * typedef typename raw_hasher_type::hash_type hash_type;
 		 * 
-		 * msize_type message_size() const
+		 * msize_type message_size() const;
 		 * void update(const void* data, size_t size)
 		 * void finish(void* buf, size_t buf_size);
 		 * hash_type finish();
 		 */
 	}
 
-	/* Use these if you're unsure.
-	 * They copy the data into an internal array, but take care of
-	 * alignment and strict aliasing.
+	/* Use these if you're unsure. And, most likely, also if you are sure.
+	 * They copy the data into an internal array, 
+	 * but take care of alignment and strict aliasing.
 	 */
 	typedef detail::basic_hasher<word32, 224> sha224_hasher;
 	typedef detail::basic_hasher<word32, 256> sha256_hasher;
@@ -93,7 +93,7 @@ namespace sha2
 	typedef detail::basic_hasher<word64, 224> sha512_224_hasher;
 	typedef detail::basic_hasher<word64, 256> sha512_256_hasher;
 
-	/* These may be faster. (About 7% faster on my system.)
+	/* These may be faster. (About 1% - 1.5% faster on my system.)
 	 * They take an array<Word, 16> directly.
 	 * This way, if you are sure your architecture
 	 * does support this, you can cast a pointer/reference
